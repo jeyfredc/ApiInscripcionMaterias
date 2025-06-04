@@ -1,83 +1,104 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ApiInscripcionMaterias.Interfaces;
+using ApiInscripcionMaterias.Models.DTOs;
+using ApiInscripcionMaterias.Models.Entities;
+using Microsoft.AspNetCore.Authorization;
+
 using Microsoft.AspNetCore.Mvc;
+
 
 namespace ApiInscripcionMaterias.Controllers
 {
-    public class AuthController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    [AllowAnonymous] // Permite acceso sin autenticación a los endpoints
+    public class AuthController : ControllerBase
     {
-        // GET: AuthController
-        public ActionResult Index()
+        private readonly IAuthService _authService;
+        private readonly ILogger<AuthController> _logger;
+
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
-            return View();
+            _authService = authService;
+            _logger = logger;
         }
 
-        // GET: AuthController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: AuthController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: AuthController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        /// <summary>
+        /// Registra un nuevo usuario en el sistema
+        /// </summary>
+        [HttpPost("register")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<UsuarioDto>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ApiResponse))]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest usuario)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new ApiResponse("Datos de entrada inválidos", ModelState));
+                }
+
+                var result = await _authService.RegisterAsync(usuario);
+
+                if (!result.Success)
+                {
+                    return BadRequest(result); // ← Ya es ApiResponse<UsuarioDto>
+                }
+
+                return Ok(result); // ← Ya es ApiResponse<UsuarioDto>
             }
-            catch
+            catch (ApplicationException appEx)
             {
-                return View();
+                // Para errores de negocio (como correo duplicado)
+                return BadRequest(new
+                {
+                    Success = false,
+                    Message = appEx.Message
+                });
             }
-        }
-
-        // GET: AuthController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: AuthController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
+            catch (Exception ex)
             {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
+                _logger.LogError(ex, "Error al registrar usuario");
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = "Error interno del servidor"
+                });
             }
         }
 
-        // GET: AuthController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: AuthController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                _logger.LogInformation("🔐 Intento de inicio de sesión para: {Email}", request.Email);
+
+                var result = await _authService.AuthenticateAsync(request.Email, request.Password);
+
+                if (!result.Success)
+                {
+                    _logger.LogWarning("❌ Autenticación fallida para: {Email}", request.Email);
+                    return Unauthorized(result);
+                }
+
+                _logger.LogInformation("✅ Inicio de sesión exitoso para: {Email}", request.Email);
+                return Ok(result);
             }
-            catch
+            catch (Exception ex)
             {
-                return View();
+                _logger.LogError(ex, "❌ Error en inicio de sesión para: {Email}", request.Email);
+                return StatusCode(500, new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Error interno del servidor",
+                    Errors = new[] { ex.Message }
+                });
             }
         }
+
+
     }
 }
+
+
+
