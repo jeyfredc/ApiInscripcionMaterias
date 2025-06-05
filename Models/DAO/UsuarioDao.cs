@@ -88,40 +88,12 @@ public async Task<UsuarioDto> RegistrarUsuario(RegisterRequest usuario)
                 usuario.Nombre = usuarioRow["Nombre"].ToString();
                 usuario.Email = usuarioRow["Email"].ToString();
                 usuario.Password = usuarioRow["password_hash"].ToString();
-
-                // Mapear Rol
-                if (dataSet.Tables.Count > 1 && dataSet.Tables[1].Rows.Count > 0)
+                // Verificar si el rol existe en el DataRow
+                if (usuarioRow["rol_nombre"] != DBNull.Value)
                 {
-                    var rolRow = dataSet.Tables[1].Rows[0];
-                    usuario.Rol = new Rol
-                    {
-                        Id = Convert.ToInt32(rolRow["Id"]),
-                    
-                    };
-                }
-
-                // Mapear Estudiante (si existe)
-                if (dataSet.Tables.Count > 2 && dataSet.Tables[2].Rows.Count > 0)
-                {
-                    var estudianteRow = dataSet.Tables[2].Rows[0];
-                    usuario.Estudiante = new Estudiante
-                    {
-                        Id = Convert.ToInt32(estudianteRow["Id"]),
-                        Usuario_Id = usuario.RolId,
-                        // ... otras propiedades de Estudiante
-                    };
-                }
-
-                // Mapear Profesor (si existe)
-                if (dataSet.Tables.Count > 3 && dataSet.Tables[3].Rows.Count > 0)
-                {
-                    var profesorRow = dataSet.Tables[3].Rows[0];
-                    usuario.Profesor = new Profesor
-                    {
-                        Id = Convert.ToInt32(profesorRow["Id"]),
-                        Usuario_Id = usuario.RolId,
-                        // ... otras propiedades de Profesor
-                    };
+                    // Asegurarse de que el objeto Rol esté inicializado
+                    usuario.Rol ??= new Rol();
+                    usuario.Rol.Nombre = usuarioRow["rol_nombre"].ToString();
                 }
 
                 return usuario;

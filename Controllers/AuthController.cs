@@ -10,7 +10,7 @@ namespace ApiInscripcionMaterias.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous] // Permite acceso sin autenticación a los endpoints
+    [AllowAnonymous] 
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -41,14 +41,14 @@ namespace ApiInscripcionMaterias.Controllers
 
                 if (!result.Success)
                 {
-                    return BadRequest(result); // ← Ya es ApiResponse<UsuarioDto>
+                    return BadRequest(result); 
                 }
 
-                return Ok(result); // ← Ya es ApiResponse<UsuarioDto>
+                return Ok(result); 
             }
             catch (ApplicationException appEx)
             {
-                // Para errores de negocio (como correo duplicado)
+            
                 return BadRequest(new
                 {
                     Success = false,

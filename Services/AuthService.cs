@@ -154,48 +154,60 @@ public class AuthService : IAuthService
         {
             // 1. Obtener configuración
             var secret = _configuration["JwtSettings:Key"];
+            var issuer = _configuration["JwtSettings:Issuer"];
+            var audience = _configuration["JwtSettings:Audience"];
+            var accessTokenExpiration = _configuration.GetValue<int>("JwtSettings:AccessTokenExpirationMinutes", 60);
+
             if (string.IsNullOrEmpty(secret))
             {
                 throw new ArgumentNullException("JwtSettings:Key", "La clave secreta JWT no está configurada");
             }
 
-            // 2. Crear claims estándar JWT
-            var claims = new List<Claim>
-        {
-            // name = Nombre del usuario
-            new Claim(JwtRegisteredClaimNames.Name, usuario.Nombre ?? string.Empty),
-            // iat (issued at) = Fecha de emisión
-            new Claim(JwtRegisteredClaimNames.Iat,
-                     DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
-                     ClaimValueTypes.Integer64),
-            // Agregar email
-            new Claim(JwtRegisteredClaimNames.Email, usuario.Email ?? string.Empty)
-        };
-
-            // 3. Agregar rol si existe
-            if (!string.IsNullOrEmpty(usuario.Rol?.Nombre))
+            // 2. Validar que la clave tenga la longitud mínima segura
+            if (secret.Length < 32) // 256 bits
             {
-                claims.Add(new Claim("role", usuario.Rol.Nombre));
+                throw new ArgumentException("La clave secreta debe tener al menos 32 caracteres (256 bits)");
             }
 
-            // 4. Configurar credenciales
+            // 3. Crear claims
+            var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, usuario.RolId.ToString()),
+            new Claim(JwtRegisteredClaimNames.Name, usuario.Nombre ?? string.Empty),
+            new Claim(JwtRegisteredClaimNames.Email, usuario.Email ?? string.Empty),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Iat,
+                     DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                     ClaimValueTypes.Integer64)
+        };
+
+            // 4. Agregar rol si existe
+            if (!string.IsNullOrEmpty(usuario.Rol?.Nombre))
+            {
+                claims.Add(new Claim(ClaimTypes.Role, usuario.Rol.Nombre));
+                claims.Add(new Claim("role", usuario.Rol.Nombre)); // Para compatibilidad
+            }
+
+            // 5. Configurar credenciales
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            // 5. Configurar tiempo de expiración (opcional)
-            var expiresInDays = _configuration.GetValue<int>("Jwt:ExpireDays", 7);
-            var expires = DateTime.UtcNow.AddDays(expiresInDays);
+            // 6. Configurar tiempo de expiración
+            var jwtSettings = _configuration.GetSection("JwtSettings");
+            var expiresInMinutes = jwtSettings.GetValue<int>("AccessTokenExpirationMinutes");
+            var expires = DateTime.UtcNow.AddMinutes(expiresInMinutes);
 
-            // 6. Crear el token
+
+            // 7. Crear el token
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
+                issuer: issuer,
+                audience: audience,
                 claims: claims,
                 expires: expires,
                 signingCredentials: creds
             );
 
-            // 7. Escribir el token
+            // 8. Escribir el token
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
         catch (Exception ex)
