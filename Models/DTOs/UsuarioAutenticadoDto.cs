@@ -9,5 +9,7 @@
         public int? Creditos_Disponibles { get; set; }
         public string Token { get; set; }
 
+        public int? Id_Profesor { get; set; }
+
     }
 }

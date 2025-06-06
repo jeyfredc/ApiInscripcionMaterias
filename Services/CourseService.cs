@@ -149,5 +149,134 @@ namespace ApiInscripcionMaterias.Services
                 };
             }
         }
+
+        public async Task<ApiResponse<ResultCourseInscriptionDto>> RegisterNewCourse(RegisterCourseDto newCourse)
+        {
+            try
+            {
+                if (newCourse == null)
+                {
+                    return new ApiResponse<ResultCourseInscriptionDto>
+                    {
+                        Success = false,
+                        Message = "Los datos de la materia son requeridos",
+                        Data = null
+                    };
+                }
+
+                var result = await _courseDao.RegisterNewCourse(newCourse);
+
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = result.Resultado,
+                    Message = result.Mensaje,
+                    Data = result
+                };
+            }
+            catch (SqlException sqlEx)
+            {
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = false,
+                    Message = "Error en la base de datos al registrar la materia",
+                    Errors = new[] { sqlEx.Message }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = false,
+                    Message = "Error inesperado al registrar la materia",
+                    Errors = new[] { ex.Message }
+                };
+            }
+        }
+
+        public async Task<ApiResponse<IEnumerable<CourseWithoutAssignDto>>> GetUnassignedCourses()
+        {
+            try
+            {
+                var unassignedCourses = await _courseDao.GetCoursesWithouthAssign();
+
+                if (unassignedCourses == null || !unassignedCourses.Any())
+                {
+                    return new ApiResponse<IEnumerable<CourseWithoutAssignDto>>
+                    {
+                        Success = true,
+                        Message = "No se encontraron materias sin asignar",
+                        Data = Enumerable.Empty<CourseWithoutAssignDto>()
+                    };
+                }
+
+                return new ApiResponse<IEnumerable<CourseWithoutAssignDto>>
+                {
+                    Success = true,
+                    Message = "Materias sin asignar obtenidas exitosamente",
+                    Data = unassignedCourses
+                };
+            }
+            catch (SqlException sqlEx)
+            {
+                return new ApiResponse<IEnumerable<CourseWithoutAssignDto>>
+                {
+                    Success = false,
+                    Message = "Error en la base de datos al obtener las materias sin asignar",
+                    Errors = new[] { sqlEx.Message }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<IEnumerable<CourseWithoutAssignDto>>
+                {
+                    Success = false,
+                    Message = "Error inesperado al obtener las materias sin asignar",
+                    Errors = new[] { ex.Message }
+                };
+            }
+        }
+
+        public async Task<ApiResponse<ResultCourseInscriptionDto>> AssignCourseTeacher(RegisterCourseTeacherDto registerCourse)
+        {
+            try
+            {
+                if (registerCourse == null)
+                {
+                    return new ApiResponse<ResultCourseInscriptionDto>
+                    {
+                        Success = false,
+                        Message = "Los datos de asignación son requeridos",
+                        Data = null
+                    };
+                }
+
+                var result = await _courseDao.AssignCourseTeacher(registerCourse);
+
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = result.Resultado,
+                    Message = result.Mensaje,
+                    Data = result
+                };
+            }
+            catch (SqlException sqlEx)
+            {
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = false,
+                    Message = "Error en la base de datos al asignar la materia al profesor",
+                    Errors = new[] { sqlEx.Message }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = false,
+                    Message = "Error inesperado al asignar la materia al profesor",
+                    Errors = new[] { ex.Message }
+                };
+            }
+        }
     }
 }

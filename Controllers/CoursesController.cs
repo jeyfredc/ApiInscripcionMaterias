@@ -186,5 +186,179 @@ namespace ApiInscripcionMaterias.Controllers
                 });
             }
         }
+
+        /// <summary>
+        /// Obtiene las materias que no han sido asignadas a ningún profesor
+        /// </summary>
+        /// <returns>Lista de materias no asignadas</returns>
+        [HttpGet("unassigned-courses")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<IEnumerable<CourseWithoutAssignDto>>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ApiResponse))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetUnassignedCourses()
+        {
+            try
+            {
+                var result = await _courseService.GetUnassignedCourses();
+
+                if (!result.Success)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = result.Message,
+                        Errors = result.Errors
+                    });
+                }
+
+                return Ok(result);
+            }
+            catch (ApplicationException appEx)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = appEx.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener las materias no asignadas");
+                return StatusCode(500, new ApiResponse
+                {
+                    Success = false,
+                    Message = "Error interno del servidor al obtener las materias no asignadas",
+                    Errors = new[] { ex.Message }
+                });
+            }
+        }
+
+        /// <summary>
+        /// Registra una nueva materia en el sistema
+        /// </summary>
+        /// <param name="newCourse">Datos de la nueva materia</param>
+        /// <returns>Resultado de la operación</returns>
+        [HttpPost("register")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<ResultCourseInscriptionDto>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ApiResponse))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "Administrador")] 
+        public async Task<IActionResult> RegisterNewCourse([FromBody] RegisterCourseDto newCourse)
+        {
+            try
+            {
+                if (newCourse == null)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Los datos de la materia son requeridos"
+                    });
+                }
+
+                var result = await _courseService.RegisterNewCourse(newCourse);
+
+                if (!result.Success)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = result.Message,
+                        Errors = result.Errors
+                    });
+                }
+
+                return Ok(result);
+            }
+            catch (ApplicationException appEx)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = appEx.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al registrar la nueva materia");
+                return StatusCode(500, new ApiResponse
+                {
+                    Success = false,
+                    Message = "Error interno del servidor al registrar la materia",
+                    Errors = new[] { ex.Message }
+                });
+            }
+        }
+
+        /// <summary>
+        /// Asigna una materia a un profesor
+        /// </summary>
+        /// <param name="registerCourse">Datos de la asignación</param>
+        /// <returns>Resultado de la operación</returns>
+        [HttpPost("assign-course-teacher")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<ResultCourseInscriptionDto>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ApiResponse))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> AssignCourseToTeacher([FromBody] RegisterCourseTeacherDto registerCourse)
+        {
+            try
+            {
+                if (registerCourse == null)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Los datos de asignación son requeridos"
+                    });
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Datos de asignación inválidos",
+                        Errors = ModelState.Values
+                            .SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage)
+                    });
+                }
+
+                var result = await _courseService.AssignCourseTeacher(registerCourse);
+
+                if (!result.Success)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = result.Message,
+                        Errors = result.Errors
+                    });
+                }
+
+                return Ok(result);
+            }
+            catch (ApplicationException appEx)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = appEx.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al asignar la materia al profesor");
+                return StatusCode(500, new ApiResponse
+                {
+                    Success = false,
+                    Message = "Error interno del servidor al asignar la materia al profesor",
+                    Errors = new[] { ex.Message }
+                });
+            }
+        }
     }
 }

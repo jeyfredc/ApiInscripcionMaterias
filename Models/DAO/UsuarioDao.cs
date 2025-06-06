@@ -85,9 +85,16 @@ namespace ApiInscripcionMaterias.Models.DAO
                 var usuario = new Usuario();
                 var usuarioRow = dataSet.Tables[0].Rows[0];
                 DataRow StudentRow = null;
+                DataRow TeacherRow = null;
                 if (dataSet.Tables[1].Rows.Count != 0)
                 {
                     StudentRow = dataSet.Tables[1].Rows[0];
+
+                }
+
+                if (dataSet.Tables[2].Rows.Count != 0)
+                {
+                    TeacherRow = dataSet.Tables[2].Rows[0];
 
                 }
 
@@ -97,6 +104,7 @@ namespace ApiInscripcionMaterias.Models.DAO
                 usuario.Password = usuarioRow["password_hash"].ToString();
                 usuario.Estudiante ??= new Estudiante();
                 usuario.Rol ??= new Rol();
+                usuario.Profesor ??= new Profesor();
 
                 // Verificar si el rol existe en el DataRow
                 if (usuarioRow["rol_nombre"] != DBNull.Value)
@@ -107,13 +115,15 @@ namespace ApiInscripcionMaterias.Models.DAO
 
                 if (usuarioRow["rol_nombre"]?.ToString() == "Estudiante")
                 {
-                    // Initialize the Estudiante object if it's null
-
-                    // Now it's safe to set the property
                     if (StudentRow["creditos_disponibles"] != DBNull.Value)
                     {
                         usuario.Estudiante.CreditosDisponibles = Convert.ToInt32(StudentRow["creditos_disponibles"]);
                     }
+                }
+
+                if(usuarioRow["rol_nombre"]?.ToString() == "Profesor")
+                {
+                       usuario.Profesor.Id = Convert.ToInt32(TeacherRow["id"]);
                 }
 
                 return usuario;
