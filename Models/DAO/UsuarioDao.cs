@@ -3,6 +3,7 @@ using ApiInscripcionMaterias.Models.DTOs;
 using ApiInscripcionMaterias.Models.Entities;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Data;
@@ -22,39 +23,39 @@ namespace ApiInscripcionMaterias.Models.DAO
             _logger?.LogInformation("✅ UsuarioDAO inicializado");
         }
 
-public async Task<UsuarioDto> RegistrarUsuario(RegisterRequest usuario)
-{
-    _logger?.LogInformation("🔹 Iniciando registro de usuario: {Email}", usuario.Email);
-
-    try
-    {
-        var parameters = new DynamicParameters();
-        parameters.Add("@Nombre", usuario.Nombre, DbType.String);
-        parameters.Add("@Email", usuario.Email, DbType.String);
-        parameters.Add("@PasswordHash", usuario.Password, DbType.String);
-        parameters.Add("@RolId", usuario.RolId, DbType.Int32);
-
-
-        var resultado = await _db.QueryFirstOrDefaultAsync<UsuarioDto>(
-            "sp_RegistrarUsuario",
-            parameters,
-            commandType: CommandType.StoredProcedure
-        );
-
-        if (resultado == null)
+        public async Task<UsuarioDto> RegistrarUsuario(RegisterRequest usuario)
         {
-            throw new ApplicationException("No se pudo completar el registro del usuario");
+            _logger?.LogInformation("🔹 Iniciando registro de usuario: {Email}", usuario.Email);
+
+            try
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("@Nombre", usuario.Nombre, DbType.String);
+                parameters.Add("@Email", usuario.Email, DbType.String);
+                parameters.Add("@PasswordHash", usuario.Password, DbType.String);
+                parameters.Add("@RolId", usuario.RolId, DbType.Int32);
+
+
+                var resultado = await _db.QueryFirstOrDefaultAsync<UsuarioDto>(
+                    "sp_RegistrarUsuario",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (resultado == null)
+                {
+                    throw new ApplicationException("No se pudo completar el registro del usuario");
+                }
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "❌ Error inesperado al registrar usuario");
+                throw;
+            }
+
         }
-
-        return resultado;
-    }
-    catch (Exception ex)
-    {
-        _logger?.LogError(ex, "❌ Error inesperado al registrar usuario");
-        throw;
-    }
-
-}
 
         public async Task<Usuario> ObtenerUsuarioPorEmail(string email)
         {
@@ -83,17 +84,36 @@ public async Task<UsuarioDto> RegistrarUsuario(RegisterRequest usuario)
                 // Mapear Usuario
                 var usuario = new Usuario();
                 var usuarioRow = dataSet.Tables[0].Rows[0];
+                DataRow StudentRow = null;
+                if (dataSet.Tables[1].Rows.Count != 0)
+                {
+                    StudentRow = dataSet.Tables[1].Rows[0];
+
+                }
 
                 usuario.RolId = Convert.ToInt32(usuarioRow["Id"]);
                 usuario.Nombre = usuarioRow["Nombre"].ToString();
                 usuario.Email = usuarioRow["Email"].ToString();
                 usuario.Password = usuarioRow["password_hash"].ToString();
+                usuario.Estudiante ??= new Estudiante();
+                usuario.Rol ??= new Rol();
+
                 // Verificar si el rol existe en el DataRow
                 if (usuarioRow["rol_nombre"] != DBNull.Value)
                 {
                     // Asegurarse de que el objeto Rol esté inicializado
-                    usuario.Rol ??= new Rol();
                     usuario.Rol.Nombre = usuarioRow["rol_nombre"].ToString();
+                }
+
+                if (usuarioRow["rol_nombre"]?.ToString() == "Estudiante")
+                {
+                    // Initialize the Estudiante object if it's null
+
+                    // Now it's safe to set the property
+                    if (StudentRow["creditos_disponibles"] != DBNull.Value)
+                    {
+                        usuario.Estudiante.CreditosDisponibles = Convert.ToInt32(StudentRow["creditos_disponibles"]);
+                    }
                 }
 
                 return usuario;

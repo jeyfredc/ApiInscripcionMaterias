@@ -12,7 +12,7 @@ namespace ApiInscripcionMaterias.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]  // Requiere autenticación
+    [Authorize]
     public class TeacherController : ControllerBase
     {
         private readonly ITeacherService _teacherService;

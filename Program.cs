@@ -142,8 +142,12 @@ builder.Services.AddSwaggerGen(c =>
 // Registrar servicios personalizados
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
+builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<UsuarioDAO>();
 builder.Services.AddScoped<TeacherDao>();
+builder.Services.AddScoped<CourseDao>();
+builder.Services.AddScoped<StudentDao>();
 
 // Agrega aquí otros servicios personalizados
 

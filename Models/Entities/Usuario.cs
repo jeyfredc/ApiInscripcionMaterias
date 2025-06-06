@@ -32,7 +32,7 @@ namespace ApiInscripcionMaterias.Models.Entities
         public int Usuario_Id { get; set; }
         public string Matricula { get; set; }
         public int CreditosTotales { get; set; }
-        public int CreditosDisponibles { get; set; }
+        public int CreditosDisponibles { get; set; } = 0;
 
         public bool Activo { get; set; }
 
