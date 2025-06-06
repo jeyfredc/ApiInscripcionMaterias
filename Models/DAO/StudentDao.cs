@@ -93,12 +93,13 @@ namespace ApiInscripcionMaterias.Models.DAO
         }
 
 
-        public async Task<IEnumerable<ClassMatesDto>> GetClassMatesByStudentId(int StudentId)
+        public async Task<IEnumerable<ClassMatesDto>> GetClassMatesByStudentId(int StudentId, string CourseCode)
         {
             try
             {
                 var parameters = new DynamicParameters();
                 parameters.Add("@estudianteId", StudentId, DbType.Int32);
+                parameters.Add("@codigoMateria", CourseCode, DbType.String);
 
                 var result = await _db.QueryAsync<dynamic>(
                     "sp_ObtenerCompanerosClase",

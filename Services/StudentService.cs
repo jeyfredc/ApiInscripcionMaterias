@@ -132,7 +132,7 @@ namespace ApiInscripcionMaterias.Services
             }
         }
 
-        public async Task<ApiResponse<IEnumerable<ClassMatesDto>>> ClassMates(int StudentId)
+        public async Task<ApiResponse<IEnumerable<ClassMatesDto>>> ClassMates(int StudentId, string CourseCode)
         {
             try
             {
@@ -145,7 +145,7 @@ namespace ApiInscripcionMaterias.Services
                     };
                 }
 
-                var classMates = await _studentDao.GetClassMatesByStudentId(StudentId);
+                var classMates = await _studentDao.GetClassMatesByStudentId(StudentId, CourseCode);
 
                 if (classMates == null || !classMates.Any())
                 {

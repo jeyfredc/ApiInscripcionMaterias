@@ -137,12 +137,12 @@ namespace ApiInscripcionMaterias.Controllers
         /// </summary>
         /// <param name="studentId">ID del estudiante</param>
         /// <returns>Lista de estudiantes inscritos en el curso</returns>
-        [HttpGet("getClassMatesByStudentId/{studentId}")]
+        [HttpGet("getClassMatesByStudentId/{studentId}/{courseCode}")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<ClassMatesDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetClassMatesByStudentId(int studentId)
+        public async Task<IActionResult> GetClassMatesByStudentId(int studentId, string courseCode)
         {
             try
             {
@@ -155,7 +155,7 @@ namespace ApiInscripcionMaterias.Controllers
                     });
                 }
 
-                var result = await _studentService.ClassMates(studentId);
+                var result = await _studentService.ClassMates(studentId, courseCode);
 
                 if (!result.Success)
                 {

@@ -6,6 +6,6 @@ namespace ApiInscripcionMaterias.Interfaces
     {
         Task<ApiResponse<StudentCreditsDto>> GetStudentCredits(int userId);
         Task<ApiResponse<IEnumerable<StudentCoursesDto>>> CoursesByStudent(int StudentId);
-        Task<ApiResponse<IEnumerable<ClassMatesDto>>> ClassMates(int StudentId);
+        Task<ApiResponse<IEnumerable<ClassMatesDto>>> ClassMates(int StudentId, string CourseCode);
     }
 }
