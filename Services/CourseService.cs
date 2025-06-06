@@ -150,7 +150,7 @@ namespace ApiInscripcionMaterias.Services
             }
         }
 
-        public async Task<ApiResponse<ResultCourseInscriptionDto>> RegisterNewCourse(RegisterCourseDto newCourse)
+        public async Task<ApiResponse<ResultCourseInscriptionDto>> RegisterNewCourse(RequestRegisterCourseDto newCourse)
         {
             try
             {

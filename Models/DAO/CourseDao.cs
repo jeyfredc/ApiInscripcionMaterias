@@ -129,7 +129,7 @@ namespace ApiInscripcionMaterias.Models.DAO
         }
 
 
-        public async Task<ResultCourseInscriptionDto> RegisterNewCourse(RegisterCourseDto newCourse)
+        public async Task<ResultCourseInscriptionDto> RegisterNewCourse(RequestRegisterCourseDto newCourse)
         {
             try
             {

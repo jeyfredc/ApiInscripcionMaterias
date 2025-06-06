@@ -239,13 +239,13 @@ namespace ApiInscripcionMaterias.Controllers
         /// </summary>
         /// <param name="newCourse">Datos de la nueva materia</param>
         /// <returns>Resultado de la operación</returns>
-        [HttpPost("register")]
+        [HttpPost("register-new-course")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<ResultCourseInscriptionDto>))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ApiResponse))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [Authorize(Roles = "Administrador")] 
-        public async Task<IActionResult> RegisterNewCourse([FromBody] RegisterCourseDto newCourse)
+
+        public async Task<IActionResult> RegisterNewCourse([FromBody] RequestRegisterCourseDto newCourse)
         {
             try
             {
