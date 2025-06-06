@@ -131,5 +131,48 @@ namespace ApiInscripcionMaterias.Controllers
                 });
             }
         }
+
+        /// <summary>
+        /// Obtiene los estudiantes inscritos en un curso por su ID
+        /// </summary>
+        /// <param name="studentId">ID del estudiante</param>
+        /// <returns>Lista de estudiantes inscritos en el curso</returns>
+        [HttpGet("getClassMatesByStudentId/{studentId}")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ClassMatesDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetClassMatesByStudentId(int studentId)
+        {
+            try
+            {
+                if (studentId <= 0)
+                {
+                    return BadRequest(new ApiResponse<IEnumerable<ClassMatesDto>>
+                    {
+                        Success = false,
+                        Message = "El ID del estudiante no es válido"
+                    });
+                }
+
+                var result = await _studentService.ClassMates(studentId);
+
+                if (!result.Success)
+                {
+                    return NotFound(new { result.Message, result.Errors });
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse<IEnumerable<ClassMatesDto>>
+                {
+                    Success = false,
+                    Message = "Error interno del servidor al procesar la solicitud",
+                    Errors = new[] { ex.Message }
+                });
+            }
+        }
     }
 }

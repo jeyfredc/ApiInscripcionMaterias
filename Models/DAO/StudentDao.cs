@@ -78,7 +78,7 @@ namespace ApiInscripcionMaterias.Models.DAO
                     Codigomateria = c.CodigoMateria,
                     Materia = c.Materia,
                     Profesor = c.Profesor,
-                    Horario = c.horario, 
+                    Horario = c.horario,
                     FehaInscripcion = c.FechaInscripcion
                 }).ToList();
 
@@ -88,6 +88,44 @@ namespace ApiInscripcionMaterias.Models.DAO
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error al obtener cursos para el estudiante ID: {StudentId}", StudentId);
+                throw;
+            }
+        }
+
+
+        public async Task<IEnumerable<ClassMatesDto>> GetClassMatesByStudentId(int StudentId)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("@estudianteId", StudentId, DbType.Int32);
+
+                var result = await _db.QueryAsync<dynamic>(
+                    "sp_ObtenerCompanerosClase",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (result == null || !result.Any())
+                {
+                    return new List<ClassMatesDto>();
+                }
+
+                var classMates = result.Select(c => new ClassMatesDto
+                {
+                    CodigoMateria = c.CodigoMateria,
+                    Materia = c.Materia,
+                    NombreEstudiante = c.NombreEstudiante,
+                    Email = c.Email,
+                    Matricula = c.Matricula,
+
+                }).ToList();
+
+
+                return classMates;
+            }
+            catch (Exception ex)
+            {
                 throw;
             }
         }

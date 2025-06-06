@@ -131,5 +131,49 @@ namespace ApiInscripcionMaterias.Services
                 };
             }
         }
+
+        public async Task<ApiResponse<IEnumerable<ClassMatesDto>>> ClassMates(int StudentId)
+        {
+            try
+            {
+                if (StudentId <= 0)
+                {
+                    return new ApiResponse<IEnumerable<ClassMatesDto>>
+                    {
+                        Success = false,
+                        Message = "El ID del estudiante no es válido"
+                    };
+                }
+
+                var classMates = await _studentDao.GetClassMatesByStudentId(StudentId);
+
+                if (classMates == null || !classMates.Any())
+                {
+                    return new ApiResponse<IEnumerable<ClassMatesDto>>
+                    {
+                        Success = true,
+                        Message = "No se encontraron estudiantes",
+                        Data = new List<ClassMatesDto>()
+                    };
+                }
+
+                return new ApiResponse<IEnumerable<ClassMatesDto>>
+                {
+                    Success = true,
+                    Message = "Estudiantes obtenidos exitosamente",
+                    Data = classMates
+                };
+            }
+            catch (Exception ex)
+            {
+
+                return new ApiResponse<IEnumerable<ClassMatesDto>>
+                {
+                    Success = false,
+                    Message = "Error al obtener estudiantes",
+                    Errors = new[] { ex.Message }
+                };
+            }
+        }
     }
 }
