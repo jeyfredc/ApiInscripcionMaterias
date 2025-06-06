@@ -8,5 +8,6 @@ namespace ApiInscripcionMaterias.Interfaces
     {
         Task<ApiResponse<IEnumerable<CoursesResponseDto>>> GetCourses();
         Task<ApiResponse<ResultCourseInscriptionDto>> CourseInscription(FormCourseRequestDto course);
+        Task<ApiResponse<ResultCourseInscriptionDto>> RemoveInscription(FormCourseRequestDto course);
     }
 }

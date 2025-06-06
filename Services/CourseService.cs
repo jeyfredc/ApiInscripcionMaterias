@@ -106,5 +106,48 @@ namespace ApiInscripcionMaterias.Services
                 };
             }
         }
+
+        public async Task<ApiResponse<ResultCourseInscriptionDto>> RemoveInscription(FormCourseRequestDto course)
+        {
+            try
+            {
+                var result = await _courseDao.DeleteCourseByStudent(course);
+
+                if (result == null)
+                {
+                    return new ApiResponse<ResultCourseInscriptionDto>
+                    {
+                        Success = false,
+                        Message = "No se pudo procesar la desubscripcion del curso",
+                        Data = null
+                    };
+                }
+
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = result.Resultado,
+                    Message = result.Mensaje,
+                    Data = result
+                };
+            }
+            catch (SqlException sqlEx)
+            {
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = false,
+                    Message = "Ocurrió un error en la base de datos al procesar la inscripción",
+                    Errors = new[] { sqlEx.Message }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = false,
+                    Message = "Ha ocurrido un error inesperado al procesar la inscripción",
+                    Errors = new[] { ex.Message }
+                };
+            }
+        }
     }
 }

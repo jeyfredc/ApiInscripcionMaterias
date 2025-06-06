@@ -1,7 +1,6 @@
 ﻿using ApiInscripcionMaterias.Models.DTOs;
 using ApiInscripcionMaterias.Models.DTOs.Courses;
 using ApiInscripcionMaterias.Models.DTOs.Student;
-using ApiInscripcionMaterias.Models.DTOs.Teacher;
 using Dapper;
 using System.Data;
 
@@ -63,6 +62,46 @@ namespace ApiInscripcionMaterias.Models.DAO
 
                 await _db.ExecuteAsync(
                     "sp_MatricularMateria",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                var resultado = parameters.Get<bool>("@resultado");
+                var mensaje = parameters.Get<string>("@mensaje");
+                var returnValue = parameters.Get<int>("@ReturnValue");
+
+                return new ResultCourseInscriptionDto
+                {
+                    Resultado = resultado,
+                    Mensaje = $"{mensaje} Codigo Materia: {course.CodigoMateria}",
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "❌ Error al realizar la inscripción");
+                return new ResultCourseInscriptionDto
+                {
+                    Resultado = false,
+                    Mensaje = "Ocurrió un error al procesar la inscripción"
+                };
+            }
+        }
+
+        public async Task<ResultCourseInscriptionDto> DeleteCourseByStudent(FormCourseRequestDto course)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+
+                parameters.Add("@estudianteId", course.IdEstudiante, DbType.Int32);
+                parameters.Add("@codigoMateria", course.CodigoMateria, DbType.String);
+
+                parameters.Add("@resultado", dbType: DbType.Boolean, direction: ParameterDirection.Output);
+                parameters.Add("@mensaje", dbType: DbType.String, size: 500, direction: ParameterDirection.Output);
+                parameters.Add("@ReturnValue", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);
+
+                await _db.ExecuteAsync(
+                    "sp_DesmatricularMateria",
                     parameters,
                     commandType: CommandType.StoredProcedure
                 );

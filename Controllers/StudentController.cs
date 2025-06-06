@@ -87,5 +87,49 @@ namespace ApiInscripcionMaterias.Controllers
                 });
             }
         }
+
+        /// <summary>
+        /// Obtiene los cursos de un estudiante por su ID
+        /// </summary>
+        /// <param name="studentId">ID del estudiante</param>
+        /// <returns>Lista de cursos del estudiante</returns>
+        [HttpGet("coursesById/{studentId}")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<StudentCoursesDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetStudentCourses(int studentId)
+        {
+            try
+            {
+                if (studentId <= 0)
+                {
+                    return BadRequest(new ApiResponse<IEnumerable<StudentCoursesDto>>
+                    {
+                        Success = false,
+                        Message = "El ID del estudiante no es válido"
+                    });
+                }
+
+                var result = await _studentService.CoursesByStudent(studentId);
+
+                if (!result.Success)
+                {
+                    return NotFound(new { result.Message, result.Errors });
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener los cursos del estudiante ID: {StudentId}", studentId);
+                return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse<IEnumerable<StudentCoursesDto>>
+                {
+                    Success = false,
+                    Message = "Error interno del servidor al procesar la solicitud",
+                    Errors = new[] { ex.Message }
+                });
+            }
+        }
     }
 }

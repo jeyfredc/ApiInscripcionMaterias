@@ -54,5 +54,43 @@ namespace ApiInscripcionMaterias.Models.DAO
                 throw;
             }
         }
+
+        public async Task<IEnumerable<StudentCoursesDto>> GetCoursesByStudentId(int StudentId)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("@estudianteId", StudentId, DbType.Int32);
+
+                var result = await _db.QueryAsync<dynamic>(
+                    "sp_ObtenerHorarioEstudiante",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (result == null || !result.Any())
+                {
+                    return new List<StudentCoursesDto>();
+                }
+
+                var coursesStudent = result.Select(c => new StudentCoursesDto
+                {
+                    Codigomateria = c.CodigoMateria,
+                    Materia = c.Materia,
+                    Profesor = c.Profesor,
+                    Horario = c.horario, 
+                    FehaInscripcion = c.FechaInscripcion
+                }).ToList();
+
+                _logger.LogInformation("Cursos obtenidos exitosamente para el estudiante ID: {StudentId}", StudentId);
+                return coursesStudent;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener cursos para el estudiante ID: {StudentId}", StudentId);
+                throw;
+            }
+        }
+
     }
 }

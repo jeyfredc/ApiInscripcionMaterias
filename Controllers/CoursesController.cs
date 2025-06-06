@@ -127,5 +127,64 @@ namespace ApiInscripcionMaterias.Controllers
                 });
             }
         }
+
+        [HttpDelete("remove-course")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<List<ResultCourseInscriptionDto>>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ApiResponse))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteCourse([FromBody] List<FormCourseRequestDto> request)
+        {
+            try
+            {
+                if (request == null || !request.Any())
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "La lista de materias a remover no puede estar vacía"
+                    });
+                }
+
+                var results = new List<ResultCourseInscriptionDto>();
+
+                foreach (var course in request)
+                {
+                    var response = await _courseService.RemoveInscription(course);
+                    if (response.Data != null)
+                    {
+                        results.Add(response.Data);
+                    }
+                }
+
+                var allSuccess = results.All(r => r.Resultado);
+
+                return Ok(new ApiResponse<List<ResultCourseInscriptionDto>>
+                {
+                    Success = allSuccess,
+                    Message = allSuccess
+                        ? "Se removieron correctamente las materias inscritas"
+                        : "Se removio la materia correctamente",
+                    Data = results
+                });
+            }
+            catch (ApplicationException appEx)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = appEx.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse
+                {
+                    Success = false,
+                    Message = "Error interno del servidor al remover las inscripciones",
+                    Errors = new[] { ex.Message }
+                });
+            }
+        }
     }
 }

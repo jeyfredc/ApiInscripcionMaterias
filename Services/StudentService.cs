@@ -84,5 +84,52 @@ namespace ApiInscripcionMaterias.Services
                 };
             }
         }
+
+        public async Task<ApiResponse<IEnumerable<StudentCoursesDto>>> CoursesByStudent(int StudentId)
+        {
+            try
+            {
+                if (StudentId <= 0)
+                {
+                    _logger.LogWarning("ID de estudiante no válido: {StudentId}", StudentId);
+                    return new ApiResponse<IEnumerable<StudentCoursesDto>>
+                    {
+                        Success = false,
+                        Message = "El ID del estudiante no es válido"
+                    };
+                }
+
+                var studentCourses = await _studentDao.GetCoursesByStudentId(StudentId);
+
+                if (studentCourses == null || !studentCourses.Any())
+                {
+                    _logger.LogInformation("No se encontraron cursos para el estudiante ID: {StudentId}", StudentId);
+                    return new ApiResponse<IEnumerable<StudentCoursesDto>>
+                    {
+                        Success = true,
+                        Message = "No se encontraron cursos para el estudiante",
+                        Data = new List<StudentCoursesDto>()
+                    };
+                }
+
+                _logger.LogInformation("Cursos obtenidos exitosamente para el estudiante ID: {StudentId}", StudentId);
+                return new ApiResponse<IEnumerable<StudentCoursesDto>>
+                {
+                    Success = true,
+                    Message = "Cursos obtenidos exitosamente",
+                    Data = studentCourses
+                };
+            }
+            catch (Exception ex)
+            {
+
+                return new ApiResponse<IEnumerable<StudentCoursesDto>>
+                {
+                    Success = false,
+                    Message = "Error al obtener los cursos del estudiante",
+                    Errors = new[] { ex.Message }
+                };
+            }
+        }
     }
 }
