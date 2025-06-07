@@ -278,5 +278,135 @@ namespace ApiInscripcionMaterias.Services
                 };
             }
         }
+
+        public async Task<ApiResponse<IEnumerable<ListCoursesAndSchedulesDto>>> GetCoursesAndSchedules()
+        {
+            try
+            {
+                var coursesAndSchedules = await _courseDao.GetAllCoursesAndSchedules();
+
+                if (coursesAndSchedules == null || !coursesAndSchedules.Any())
+                {
+                    return new ApiResponse<IEnumerable<ListCoursesAndSchedulesDto>>
+                    {
+                        Success = false,
+                        Message = "No se encontraron materias y horarios disponibles",
+                        Data = Enumerable.Empty<ListCoursesAndSchedulesDto>()
+                    };
+                }
+
+                return new ApiResponse<IEnumerable<ListCoursesAndSchedulesDto>>
+                {
+                    Success = true,
+                    Message = "Materias y horarios obtenidos exitosamente",
+                    Data = coursesAndSchedules
+                };
+            }
+            catch (SqlException sqlEx)
+            {
+                return new ApiResponse<IEnumerable<ListCoursesAndSchedulesDto>>
+                {
+                    Success = false,
+                    Message = "Ocurrió un error en la base de datos",
+                    Errors = new[] { sqlEx.Message }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<IEnumerable<ListCoursesAndSchedulesDto>>
+                {
+                    Success = false,
+                    Message = "Ha ocurrido un error inesperado",
+                    Errors = new[] { ex.Message }
+                };
+            }
+        }
+
+
+        public async Task<ApiResponse<ResultCourseInscriptionDto>> DeleteSubject(string subjectCode)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(subjectCode))
+                {
+                    return new ApiResponse<ResultCourseInscriptionDto>
+                    {
+                        Success = false,
+                        Message = "El código de la materia es requerido",
+                        Data = null
+                    };
+                }
+
+                var result = await _courseDao.DeleteCourse(subjectCode);
+
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = result.Resultado,
+                    Message = result.Mensaje,
+                    Data = result
+                };
+            }
+            catch (SqlException sqlEx)
+            {
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = false,
+                    Message = "Error en la base de datos al eliminar la materia",
+                    Errors = new[] { sqlEx.Message }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = false,
+                    Message = "Error inesperado al eliminar la materia",
+                    Errors = new[] { ex.Message }
+                };
+            }
+        }
+
+        public async Task<ApiResponse<ResultCourseInscriptionDto>> UpdateSubjectByIdSubject(RequestUpdateSubject requestSubject)
+        {
+            try
+            {
+                if (requestSubject == null)
+                {
+                    return new ApiResponse<ResultCourseInscriptionDto>
+                    {
+                        Success = false,
+                        Message = "Los datos de la materia son requeridos",
+                        Data = null
+                    };
+                }
+
+                var result = await _courseDao.UpdateSubject(requestSubject);
+
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = result.Resultado,
+                    Message = result.Mensaje,
+                    Data = result
+                };
+            }
+            catch (SqlException sqlEx)
+            {
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = false,
+                    Message = "Error en la base de datos al actualizar la materia",
+                    Errors = new[] { sqlEx.Message }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = false,
+                    Message = "Error inesperado al actualizar la materia",
+                    Errors = new[] { ex.Message }
+                };
+            }
+        }
     }
 }

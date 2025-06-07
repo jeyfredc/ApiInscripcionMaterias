@@ -254,6 +254,103 @@ namespace ApiInscripcionMaterias.Models.DAO
             }
         }
 
+        public async Task<IEnumerable<ListCoursesAndSchedulesDto>> GetAllCoursesAndSchedules()
+
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+                var resultado = await _db.QueryAsync<ListCoursesAndSchedulesDto>(
+                        "sp_ObtenerMateriasConEstadoAsignacion",
+                        parameters,
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                if (resultado == null)
+                {
+                    throw new ApplicationException("No se pudo completar la busqueda de materias disponibles");
+                }
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "❌ No se pudo completar la busqueda de materias disponibles");
+                throw;
+            }
+
+        }
+
+        public async Task<ResultCourseInscriptionDto> DeleteCourse(string subject)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+
+                parameters.Add("@CodigoMateria", subject, DbType.String);
+
+                var result = await _db.QueryFirstOrDefaultAsync<ResultCourseInscriptionDto>(
+                                "sp_EliminarMateria",
+                                parameters,
+                                commandType: CommandType.StoredProcedure
+                            );
+
+
+
+
+                return new ResultCourseInscriptionDto
+                {
+                    Resultado = result.Resultado,
+                    Mensaje = result.Mensaje,
+                };
+            }
+            catch (Exception ex)
+            {
+
+                return new ResultCourseInscriptionDto
+                {
+                    Resultado = false,
+                    Mensaje = "Ocurrió un error al eliminar la materia"
+                };
+            }
+        }
+
+        public async Task<ResultCourseInscriptionDto> UpdateSubject(RequestUpdateSubject requestSubject)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+
+                parameters.Add("@MateriaId", requestSubject.MateriaId, DbType.Int32);
+                parameters.Add("@NuevoCodigo", requestSubject.Codigo, DbType.String);
+                parameters.Add("@NuevoNombre", requestSubject.Nombre, DbType.String);
+                parameters.Add("@NuevaDescripcion", requestSubject.Descripcion, DbType.String);
+                parameters.Add("@NuevosCreditos", requestSubject.Creditos, DbType.Int32);
+                parameters.Add("@NuevoCupoMaximo", requestSubject.Cupo_Maximo, DbType.Int32);
+                parameters.Add("@NuevosHorarios", requestSubject.Horarios, DbType.String);
+
+                var result = await _db.QueryFirstOrDefaultAsync<ResultCourseInscriptionDto>(
+                                "sp_ActualizarMateria",
+                                parameters,
+                                commandType: CommandType.StoredProcedure
+                            );
+
+                return new ResultCourseInscriptionDto
+                {
+                    Resultado = result.Resultado,
+                    Mensaje = result.Mensaje,
+                };
+            }
+            catch (Exception ex)
+            {
+
+                return new ResultCourseInscriptionDto
+                {
+                    Resultado = false,
+                    Mensaje = "Ocurrió un error al actualizar la materia"
+                };
+            }
+        }
 
     }
 }

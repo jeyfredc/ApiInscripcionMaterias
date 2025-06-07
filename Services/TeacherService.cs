@@ -1,6 +1,7 @@
 ﻿using ApiInscripcionMaterias.Interfaces;
 using ApiInscripcionMaterias.Models.DAO;
 using ApiInscripcionMaterias.Models.DTOs;
+using ApiInscripcionMaterias.Models.DTOs.Courses;
 using ApiInscripcionMaterias.Models.DTOs.Teacher;
 using Microsoft.Data.SqlClient;
 
@@ -57,6 +58,48 @@ namespace ApiInscripcionMaterias.Services
                 {
                     Success = false,
                     Message = "Ha ocurrido un error inesperado",
+                    Errors = new[] { ex.Message }
+                };
+            }
+        }
+
+        public async Task<ApiResponse<ResultCourseInscriptionDto>> UnassignTeacherSubject(RequestUnassignTeacher unassignTeacher)
+        {
+            try
+            {
+                if (unassignTeacher == null)
+                {
+                    return new ApiResponse<ResultCourseInscriptionDto>
+                    {
+                        Success = false,
+                        Message = "La solicitud no puede estar vacía"
+                    };
+                }
+
+                var result = await _teacherDao.UnassignTeacher(unassignTeacher);
+
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = result.Resultado,
+                    Message = result.Mensaje,
+                    Data = result
+                };
+            }
+            catch (SqlException sqlEx)
+            {
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = false,
+                    Message = "Error de base de datos al desasignar el profesor",
+                    Errors = new[] { sqlEx.Message }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<ResultCourseInscriptionDto>
+                {
+                    Success = false,
+                    Message = "Error inesperado al desasignar el profesor",
                     Errors = new[] { ex.Message }
                 };
             }

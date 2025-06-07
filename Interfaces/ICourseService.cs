@@ -12,5 +12,11 @@ namespace ApiInscripcionMaterias.Interfaces
         Task<ApiResponse<ResultCourseInscriptionDto>> RegisterNewCourse(RequestRegisterCourseDto newCourse);
         Task<ApiResponse<IEnumerable<CourseWithoutAssignDto>>> GetUnassignedCourses();
         Task<ApiResponse<ResultCourseInscriptionDto>> AssignCourseTeacher(RegisterCourseTeacherDto registerCourse);
+
+        Task<ApiResponse<IEnumerable<ListCoursesAndSchedulesDto>>> GetCoursesAndSchedules();
+
+        Task<ApiResponse<ResultCourseInscriptionDto>> DeleteSubject(string subjectCode);
+
+        Task<ApiResponse<ResultCourseInscriptionDto>> UpdateSubjectByIdSubject(RequestUpdateSubject requestSubject);
     }
 }

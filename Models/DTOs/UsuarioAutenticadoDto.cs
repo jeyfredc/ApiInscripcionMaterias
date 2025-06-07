@@ -10,6 +10,7 @@
         public string Token { get; set; }
 
         public int? Id_Profesor { get; set; }
+        public int? Id_Estudiante { get; set; }
 
     }
 }

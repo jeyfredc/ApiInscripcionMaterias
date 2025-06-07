@@ -1,5 +1,6 @@
 ﻿using ApiInscripcionMaterias.Interfaces;
 using ApiInscripcionMaterias.Models.DTOs;
+using ApiInscripcionMaterias.Models.DTOs.Courses;
 using ApiInscripcionMaterias.Models.DTOs.Teacher;
 using ApiInscripcionMaterias.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -79,5 +80,69 @@ namespace ApiInscripcionMaterias.Controllers
             }
         }
 
+        /// <summary>
+        /// Desasigna un profesor de una materia
+        /// </summary>
+        /// <param name="request">Datos para la desasignación</param>
+        /// <returns>Resultado de la operación</returns>
+        [HttpPost("unassign-teacher")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<ResultCourseInscriptionDto>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ApiResponse))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UnassignTeacher([FromBody] RequestUnassignTeacher request)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Iniciando desasignación de profesor para la materia: {CodigoMateria}",
+                    request?.CodigoMateria);
+
+                if (request == null)
+                {
+                    _logger.LogWarning("⚠️ La solicitud de desasignación no puede ser nula");
+                    return BadRequest(new ApiResponse("La solicitud no puede estar vacía"));
+                }
+
+                if (request.ProfesorId <= 0 || string.IsNullOrWhiteSpace(request.CodigoMateria))
+                {
+                    _logger.LogWarning("⚠️ Datos de entrada inválidos: ProfesorId: {ProfesorId}, CodigoMateria: {CodigoMateria}",
+                        request.ProfesorId, request.CodigoMateria);
+                    return BadRequest(new ApiResponse("Los datos de entrada no son válidos"));
+                }
+
+                var result = await _teacherService.UnassignTeacherSubject(request);
+
+                if (!result.Success)
+                {
+                    _logger.LogWarning("⚠️ No se pudo desasignar al profesor: {Mensaje}", result.Message);
+                    return BadRequest(result);
+                }
+
+                _logger.LogInformation("✅ Profesor desasignado exitosamente de la materia: {CodigoMateria}",
+                    request.CodigoMateria);
+                return Ok(result);
+            }
+            catch (ApplicationException appEx)
+            {
+                _logger.LogWarning(appEx, "⚠️ Error de aplicación al desasignar profesor");
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = appEx.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al desasignar al profesor de la materia: {CodigoMateria}",
+                    request?.CodigoMateria);
+                return StatusCode(500, new ApiResponse
+                {
+                    Success = false,
+                    Message = "Error interno del servidor al procesar la desasignación",
+                    Errors = new[] { ex.Message }
+                });
+            }
+
+        }
     }
 }

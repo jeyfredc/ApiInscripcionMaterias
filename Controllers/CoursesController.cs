@@ -128,7 +128,7 @@ namespace ApiInscripcionMaterias.Controllers
             }
         }
 
-        [HttpDelete("remove-course")]
+        [HttpDelete("remove-student-course")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<List<ResultCourseInscriptionDto>>))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ApiResponse))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -356,6 +356,177 @@ namespace ApiInscripcionMaterias.Controllers
                 {
                     Success = false,
                     Message = "Error interno del servidor al asignar la materia al profesor",
+                    Errors = new[] { ex.Message }
+                });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene lista de materias disponibles con sus respectivos profesores y asignaciones
+        /// </summary>
+        /// <returns>Lista de materias asignadas y sin asignar con horarios</returns>
+        [HttpGet("courses-and-schedules")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<ListCoursesAndSchedulesDto>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ApiResponse))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetAllCoursesAndSchedules()
+        {
+            try
+            {
+
+
+                var result = await _courseService.GetCoursesAndSchedules();
+
+                if (!result.Success)
+                {
+                    return NotFound(result);
+                }
+
+                return Ok(result);
+            }
+            catch (ApplicationException appEx)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = appEx.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse
+                {
+                    Success = false,
+                    Message = "Error interno del servidor al procesar la solicitud",
+                    Errors = new[] { ex.Message }
+                });
+            }
+        }
+
+
+        /// <summary>
+        /// Elimina una materia del sistema
+        /// </summary>
+        /// <param name="subjectCode">Código de la materia a eliminar</param>
+        /// <returns>Resultado de la operación</returns>
+        [HttpDelete("{subjectCode}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<ResultCourseInscriptionDto>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ApiResponse))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ApiResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteCourse(string subjectCode)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(subjectCode))
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "El código de la materia es requerido"
+                    });
+                }
+
+                var result = await _courseService.DeleteSubject(subjectCode);
+
+                if (!result.Success)
+                {
+                    return BadRequest(new ApiResponse<ResultCourseInscriptionDto>
+                    {
+                        Success = false,
+                        Message = result.Message,
+                        Errors = result.Errors
+                    });
+                }
+
+                return Ok(result);
+            }
+            catch (ApplicationException appEx)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = appEx.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar la materia con código {SubjectCode}", subjectCode);
+                return StatusCode(500, new ApiResponse
+                {
+                    Success = false,
+                    Message = "Error interno del servidor al eliminar la materia",
+                    Errors = new[] { ex.Message }
+                });
+            }
+        }
+
+        /// <summary>
+        /// Actualiza la información de una materia existente
+        /// </summary>
+        /// <param name="request">Datos actualizados de la materia</param>
+        /// <returns>Resultado de la operación</returns>
+        [HttpPut("update-subject")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<ResultCourseInscriptionDto>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ApiResponse))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateSubject([FromBody] RequestUpdateSubject request)
+        {
+            try
+            {
+                if (request == null)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Los datos de la materia son requeridos"
+                    });
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Datos de la materia inválidos",
+                        Errors = ModelState.Values
+                            .SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage)
+                    });
+                }
+
+                var result = await _courseService.UpdateSubjectByIdSubject(request);
+
+                if (!result.Success)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = result.Message,
+                        Errors = result.Errors
+                    });
+                }
+
+                return Ok(result);
+            }
+            catch (ApplicationException appEx)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = appEx.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar la materia con ID: {MateriaId}", request?.MateriaId);
+                return StatusCode(500, new ApiResponse
+                {
+                    Success = false,
+                    Message = "Error interno del servidor al actualizar la materia",
                     Errors = new[] { ex.Message }
                 });
             }

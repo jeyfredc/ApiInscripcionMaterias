@@ -127,6 +127,7 @@ public class AuthService : IAuthService
                 Rol = usuario.Rol?.Nombre,
                 Creditos_Disponibles = usuario.Estudiante.CreditosDisponibles,
                 Id_Profesor=usuario.Profesor.Id,
+                Id_Estudiante = usuario.Estudiante.Id,
                 Token = token
             };
 

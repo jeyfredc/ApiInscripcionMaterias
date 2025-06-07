@@ -118,6 +118,7 @@ namespace ApiInscripcionMaterias.Models.DAO
                     if (StudentRow["creditos_disponibles"] != DBNull.Value)
                     {
                         usuario.Estudiante.CreditosDisponibles = Convert.ToInt32(StudentRow["creditos_disponibles"]);
+                        usuario.Estudiante.Id = Convert.ToInt32(StudentRow["id"]);
                     }
                 }
 

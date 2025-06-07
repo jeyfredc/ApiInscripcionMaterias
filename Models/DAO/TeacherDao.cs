@@ -1,7 +1,9 @@
 ﻿using ApiInscripcionMaterias.Models.DTOs;
+using ApiInscripcionMaterias.Models.DTOs.Courses;
 using ApiInscripcionMaterias.Models.DTOs.Teacher;
 using Dapper;
 using System.Data;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace ApiInscripcionMaterias.Models.DAO
 {
@@ -21,8 +23,6 @@ namespace ApiInscripcionMaterias.Models.DAO
         public async Task<IEnumerable<TeacherResponseDto>> GetAssignedCourses(int userId)
 
         {
-
-
             try
             {
                 var parameters = new DynamicParameters();
@@ -48,6 +48,40 @@ namespace ApiInscripcionMaterias.Models.DAO
                 throw;
             }
 
+        }
+
+        public async Task<ResultCourseInscriptionDto> UnassignTeacher(RequestUnassignTeacher unassignTeacher)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+
+                parameters.Add("@ProfesorId", unassignTeacher.ProfesorId, DbType.Int32);
+                parameters.Add("@CodigoMateria", unassignTeacher.CodigoMateria, DbType.String);
+
+
+                var result = await _db.QueryFirstOrDefaultAsync<ResultCourseInscriptionDto>(
+                                "sp_EliminarAsignacionMateriaProfesor",
+                                parameters,
+                                commandType: CommandType.StoredProcedure
+                            );
+
+
+                return new ResultCourseInscriptionDto
+                {
+                    Resultado = result.Resultado,
+                    Mensaje = result.Mensaje,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "❌ Error al desasignar al profesor");
+                return new ResultCourseInscriptionDto
+                {
+                    Resultado = false,
+                    Mensaje = "Ocurrió un error al desasignar al profesor"
+                };
+            }
         }
     }
 }
