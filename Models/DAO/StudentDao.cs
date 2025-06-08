@@ -38,7 +38,6 @@ namespace ApiInscripcionMaterias.Models.DAO
                     return null;
                 }
 
-                // Mapeamos el resultado dinámico a nuestro DTO
                 var studentCredits = new StudentCreditsDto
                 {
                     EstudianteId = result.EstudianteId,

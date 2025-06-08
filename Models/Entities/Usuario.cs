@@ -9,7 +9,7 @@ namespace ApiInscripcionMaterias.Models.Entities
         public string Email { get; set; }
         public string Password { get; set; }
         public int RolId { get; set; }
-        public Rol Rol { get; set; }  // Asegúrate de tener esta propiedad
+        public Rol Rol { get; set; } 
         public Estudiante Estudiante { get; set; }
         public Profesor Profesor { get; set; }
     }

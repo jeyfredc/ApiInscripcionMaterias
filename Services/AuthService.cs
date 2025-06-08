@@ -78,7 +78,7 @@ public class AuthService : IAuthService
     {
         try
         {
-            // 1. Validar que el email no esté vacío
+
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
                 return new ApiResponse<UsuarioAutenticadoDto>
@@ -89,13 +89,12 @@ public class AuthService : IAuthService
                 };
             }
 
-            // 2. Buscar el usuario por email
+
             var usuario = await _userDao.ObtenerUsuarioPorEmail(email);
 
-            // 3. Verificar si el usuario existe
+
             if (usuario == null)
             {
-                // No revelar que el correo no existe por seguridad
                 return new ApiResponse<UsuarioAutenticadoDto>
                 {
                     Success = false,
@@ -104,7 +103,6 @@ public class AuthService : IAuthService
                 };
             }
 
-            // 4. Verificar la contraseña
             if (!VerifyPassword(password, usuario.Password))
             {
                 return new ApiResponse<UsuarioAutenticadoDto>
@@ -115,10 +113,8 @@ public class AuthService : IAuthService
                 };
             }
 
-            // 6. Generar token JWT (opcional)
             var token = GenerateJwtToken(usuario);
 
-            // 7. Mapear a DTO de respuesta
             var usuarioAutenticado = new UsuarioAutenticadoDto
             {
                 Id = usuario.RolId,
@@ -150,12 +146,10 @@ public class AuthService : IAuthService
     }
 
 
-    // Método para generar token JWT (opcional)
     private string GenerateJwtToken(Usuario usuario)
     {
         try
         {
-            // 1. Obtener configuración
             var secret = _configuration["JwtSettings:Key"];
             var issuer = _configuration["JwtSettings:Issuer"];
             var audience = _configuration["JwtSettings:Audience"];
@@ -166,13 +160,11 @@ public class AuthService : IAuthService
                 throw new ArgumentNullException("JwtSettings:Key", "La clave secreta JWT no está configurada");
             }
 
-            // 2. Validar que la clave tenga la longitud mínima segura
-            if (secret.Length < 32) // 256 bits
+            if (secret.Length < 32) 
             {
                 throw new ArgumentException("La clave secreta debe tener al menos 32 caracteres (256 bits)");
             }
 
-            // 3. Crear claims
             var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, usuario.RolId.ToString()),
@@ -184,24 +176,20 @@ public class AuthService : IAuthService
                      ClaimValueTypes.Integer64)
         };
 
-            // 4. Agregar rol si existe
             if (!string.IsNullOrEmpty(usuario.Rol?.Nombre))
             {
                 claims.Add(new Claim(ClaimTypes.Role, usuario.Rol.Nombre));
                 claims.Add(new Claim("role", usuario.Rol.Nombre)); // Para compatibilidad
             }
 
-            // 5. Configurar credenciales
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            // 6. Configurar tiempo de expiración
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var expiresInMinutes = jwtSettings.GetValue<int>("AccessTokenExpirationMinutes");
             var expires = DateTime.UtcNow.AddMinutes(expiresInMinutes);
 
 
-            // 7. Crear el token
             var token = new JwtSecurityToken(
                 issuer: issuer,
                 audience: audience,
@@ -210,7 +198,6 @@ public class AuthService : IAuthService
                 signingCredentials: creds
             );
 
-            // 8. Escribir el token
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
         catch (Exception ex)

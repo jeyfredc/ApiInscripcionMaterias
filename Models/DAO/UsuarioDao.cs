@@ -81,7 +81,6 @@ namespace ApiInscripcionMaterias.Models.DAO
                 if (dataSet.Tables.Count == 0 || dataSet.Tables[0].Rows.Count == 0)
                     return null;
 
-                // Mapear Usuario
                 var usuario = new Usuario();
                 var usuarioRow = dataSet.Tables[0].Rows[0];
                 DataRow StudentRow = null;
@@ -106,10 +105,8 @@ namespace ApiInscripcionMaterias.Models.DAO
                 usuario.Rol ??= new Rol();
                 usuario.Profesor ??= new Profesor();
 
-                // Verificar si el rol existe en el DataRow
                 if (usuarioRow["rol_nombre"] != DBNull.Value)
                 {
-                    // Asegurarse de que el objeto Rol esté inicializado
                     usuario.Rol.Nombre = usuarioRow["rol_nombre"].ToString();
                 }
 
@@ -136,11 +133,5 @@ namespace ApiInscripcionMaterias.Models.DAO
             }
         }
 
-        public void Dispose()
-        {
-            // No cerramos la conexión aquí, solo liberamos recursos si los hay
-            _logger?.LogInformation("♻️ UsuarioDAO liberando recursos");
-            // No llamar a _db.Dispose() aquí si estás usando una conexión compartida
-        }
     }
 }

@@ -221,7 +221,6 @@ namespace ApiInscripcionMaterias.Models.DAO
                 parameters.Add("@Horario", registerCourse.Horario, DbType.String);
                 parameters.Add("@Grupo", registerCourse.Grupo, DbType.String);
 
-                // Usamos QueryFirstOrDefaultAsync para capturar el resultado del SELECT
                 var result = await _db.QueryFirstOrDefaultAsync<ResultCourseInscriptionDto>(
                     "sp_AsignarMateriaProfesor",
                     parameters,
@@ -245,7 +244,6 @@ namespace ApiInscripcionMaterias.Models.DAO
             }
             catch (Exception ex)
             {
-                // Capturamos cualquier excepción que pueda ocurrir
                 return new ResultCourseInscriptionDto
                 {
                     Resultado = false,
